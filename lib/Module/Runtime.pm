@@ -31,12 +31,10 @@ use warnings;
 use strict;
 
 use Carp qw(croak);
-use Exporter;
 
-our $VERSION = "0.004";
+our $VERSION = "0.005";
 
-our @ISA = qw(Exporter);
-
+use base "Exporter";
 our @EXPORT_OK = qw(
 	is_valid_module_name require_module
 	use_module use_package_optimistically
@@ -87,7 +85,7 @@ was already loaded.
 sub require_module($) {
 	my($name) = @_;
 	croak "bad module name `$name'" unless is_valid_module_name($name);
-	eval("require ".$name) || die $@;
+	eval("local \$SIG{__DIE__}; require $name") || die $@;
 }
 
 =item use_module(NAME[, VERSION])
@@ -151,7 +149,7 @@ function work just like C<use_module>.
 
 =cut
 
-sub has_version_var($) {
+sub _has_version_var($) {
 	my($name) = @_;
 	no strict "refs";
 	my $vg = ${"${name}::"}{VERSION};
@@ -161,10 +159,10 @@ sub has_version_var($) {
 sub use_package_optimistically($;$) {
 	my($name, $version) = @_;
 	croak "bad module name `$name'" unless is_valid_module_name($name);
-	unless(has_version_var($name)) {
-		eval "require $name";
+	unless(_has_version_var($name)) {
+		eval "local \$SIG{__DIE__}; require $name";
 		die $@ if $@ ne "" && $@ !~ /\ACan't locate .* at \(eval /;
-		unless(has_version_var($name)) {
+		unless(_has_version_var($name)) {
 			no strict "refs";
 			${"${name}::VERSION"} = undef;
 		}
@@ -239,6 +237,8 @@ Andrew Main (Zefram) <zefram@fysh.org>
 =head1 COPYRIGHT
 
 Copyright (C) 2004, 2006, 2007 Andrew Main (Zefram) <zefram@fysh.org>
+
+=head1 LICENSE
 
 This module is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
