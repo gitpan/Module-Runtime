@@ -1,6 +1,6 @@
 ---
 name: Module-Runtime
-version: 0.005
+version: 0.006
 author:
   - 'Andrew Main (Zefram) <zefram@fysh.org>'
 abstract: runtime module handling
@@ -10,7 +10,7 @@ resources:
 requires:
   Carp: 0
   Exporter: 0
-  base: 0
+  parent: 0
   perl: 5.006
   strict: 0
   warnings: 0
@@ -26,8 +26,8 @@ dynamic_config: 0
 provides:
   Module::Runtime:
     file: lib/Module/Runtime.pm
-    version: 0.005
-generated_by: Module::Build version 0.2808
+    version: 0.006
+generated_by: Module::Build version 0.31012
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
   version: 1.2

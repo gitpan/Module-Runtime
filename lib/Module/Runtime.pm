@@ -32,9 +32,9 @@ use strict;
 
 use Carp qw(croak);
 
-our $VERSION = "0.005";
+our $VERSION = "0.006";
 
-use base "Exporter";
+use parent "Exporter";
 our @EXPORT_OK = qw(
 	is_valid_module_name require_module
 	use_module use_package_optimistically
@@ -54,6 +54,8 @@ consist of one or more identifier characters (alphanumerics plus "_");
 the first character of the string must not be a digit.  Thus C<IO::File>,
 C<warnings>, and C<foo::123::x_0> are all valid module names, whereas
 C<IO::> and C<1foo::bar> are not.
+Only ASCII characters are permitted; Perl's handling of non-ASCII
+characters in source code is inconsistent.
 
 Note that C<'> separators are I<not> permitted by this function.
 
@@ -61,7 +63,7 @@ Note that C<'> separators are I<not> permitted by this function.
 
 sub is_valid_module_name($) {
 	my($string) = @_;
-	$string =~ m#\A[a-zA-Z_]\w*(?:::\w+)*\z#
+	$string =~ m#\A[a-zA-Z_][0-9a-zA-Z_]*(?:::[0-9a-zA-Z_]+)*\z#
 }
 
 =item require_module(NAME)
@@ -176,14 +178,18 @@ sub use_package_optimistically($;$) {
 Tests whether SPEC is valid input for C<compose_module_name()>.
 See below for what that entails.  Whether a PREFIX is supplied affects
 the validity of SPEC, but the exact value of the prefix is unimportant,
-so this function treats PREFIX as a boolean.
+so this function treats PREFIX as a truth value.
 
 =cut
 
 sub is_valid_module_spec($$) {
 	my($prefix, $spec) = @_;
-	($prefix && $spec =~ m{\A\w+(?:(?:/|::)\w+)*\z})
-		|| $spec =~ m{\A(?:/|::)?([a-zA-Z_]\w*(?:(?:/|::)\w+)*)\z};
+	return ($prefix && $spec =~ m{\A
+				      [0-9][0-9a-zA-Z_]*
+				      (?:(?:/|::)[0-9a-zA-Z_]+)*\z}x) ||
+		($spec =~ m{\A(?:/|::)?
+			    [a-zA-Z_][0-9a-zA-Z_]*
+			    (?:(?:/|::)[0-9a-zA-Z_]+)*\z}x);
 }
 
 =item compose_module_name(PREFIX, SPEC)
@@ -211,9 +217,12 @@ sub compose_module_name($$) {
 	my($prefix, $spec) = @_;
 	croak "bad module prefix `$prefix'"
 		if defined($prefix) && !is_valid_module_name($prefix);
-	if(defined($prefix) && $spec =~ m{\A\w+(?:(?:/|::)\w+)*\z}) {
+	if(defined($prefix) && $spec =~ m{\A[0-9a-zA-Z_]+
+					  (?:(?:/|::)[0-9a-zA-Z_]+)*\z}x) {
 		$spec = $prefix."::".$spec;
-	} elsif($spec =~ m{\A(?:/|::)?([a-zA-Z_]\w*(?:(?:/|::)\w+)*)\z}) {
+	} elsif($spec =~ m{\A(?:/|::)?
+			   ([a-zA-Z_][0-9a-zA-Z_]*
+			    (?:(?:/|::)[0-9a-zA-Z_]+)*)\z}x) {
 		$spec = $1;
 	} else {
 		croak "bad module specification `$spec'";
@@ -236,7 +245,8 @@ Andrew Main (Zefram) <zefram@fysh.org>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2004, 2006, 2007 Andrew Main (Zefram) <zefram@fysh.org>
+Copyright (C) 2004, 2006, 2007, 2009
+Andrew Main (Zefram) <zefram@fysh.org>
 
 =head1 LICENSE
 
