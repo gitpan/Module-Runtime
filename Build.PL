@@ -1,3 +1,4 @@
+{ use 5.006; }
 use warnings;
 use strict;
 
@@ -6,9 +7,11 @@ use Module::Build;
 Module::Build->new(
 	module_name => "Module::Runtime",
 	license => "perl",
+	configure_requires => {
+		"Module::Build" => 0,
+		"perl" => "5.006",
+	},
 	build_requires => {
-		"Math::Complex" => 0,
-		"Math::Trig" => 0,
 		"Module::Build" => 0,
 		"Test::More" => 0,
 		"perl" => "5.006",
@@ -16,8 +19,8 @@ Module::Build->new(
 		"warnings" => 0,
 	},
 	requires => {
-		"Carp" => 0,
 		"Exporter" => 0,
+		"Params::Classify" => 0,
 		"parent" => 0,
 		"perl" => "5.006",
 		"strict" => 0,
@@ -29,4 +32,4 @@ Module::Build->new(
 	sign => 1,
 )->create_build_script;
 
-exit 0;
+1;
