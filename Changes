@@ -1,3 +1,18 @@
+version 0.008; 2011-05-16
+
+  * change usage of Params::Classify functions to take advantage of
+    custom ops in Params::Classify 0.012
+
+  * use full stricture in test suite
+
+  * in Build.PL, complete declaration of configure-time requirements
+
+  * explicitly state version required of Params::Classify
+
+  * include META.json in distribution
+
+  * add MYMETA.json and MYMETA.yml to .cvsignore
+
 version 0.007; 2010-03-19
 
   * add "check_" functions for argument checking

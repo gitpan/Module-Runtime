@@ -1,5 +1,5 @@
 This file contains message digests of all files listed in MANIFEST,
-signed via the Module::Signature module, version 0.61.
+signed via the Module::Signature module, version 0.68.
 
 To verify the content in this distribution, first make sure you have
 Module::Signature installed, then type:
@@ -14,28 +14,29 @@ not run its Makefile.PL or Build.PL.
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-SHA1 b6d25225ba8a64214777140d46baa28efac5f182 .cvsignore
-SHA1 e909e0a1d479fd4ed3897aee5c8412951b232da4 Build.PL
-SHA1 6103e60866161c8c1513f336e4a9aced06597fa8 Changes
-SHA1 f76971807c061f8f771566271fc88b6da3602dff MANIFEST
-SHA1 cefaac62020f304df8b4d4a50ce1f0b31deceb9e META.yml
-SHA1 f8469f20cf26bafaffabb905631b945ab0f81289 Makefile.PL
-SHA1 a8fb1cf3c6b9aef90fceb32bdf029977af15cb0c README
-SHA1 e0961c44d0681ab618372d1209338b7ac0820134 lib/Module/Runtime.pm
+SHA1 ebdaab906c62ff40b3e35b320d0724e2e38cd959 .cvsignore
+SHA1 de6c2fdf1247bfd8b7eecfba4fd403d615fe5102 Build.PL
+SHA1 b0d0a3fa6efc768957588c6dac8a303e275ffa76 Changes
+SHA1 20cb1414aa8d6bbfe6e2a2f43e3c42b7842a8882 MANIFEST
+SHA1 d7af9c24061e196efbab8bd207d14009f08ffdcd META.json
+SHA1 b93fd0757cc04b30749ea580421e80355213da2a META.yml
+SHA1 a4df8e97ccd390a42212af5a9f4d0986c85e7a5f Makefile.PL
+SHA1 51e1825521428873eb7ffb3dbba5503fd71fa23d README
+SHA1 7cc4cc314d92832b5d7f8f3ac41c23511c64b2f9 lib/Module/Runtime.pm
 SHA1 15f83d769adddc47c9b7f41bfd1c8d109af030f5 t/Mod0.pm
 SHA1 c9ec963e8dc84fa17c79746429c5ca0224202dff t/Mod1.pm
-SHA1 d1daf64b7648733cfacf95e0152e94d8bcc3b8bf t/cmn.t
-SHA1 5cfcdf0696c7f54bb87f95d8926de5ec37398ef9 t/ivmn.t
-SHA1 d14755fedf4b4c07c3c615086402b0f91c960ba7 t/ivms.t
-SHA1 0e141eecf3ca4903ef38d9413b5403a9ddb0392f t/pod_cvg.t
-SHA1 74a957cd8b93f25672ecc6aa578a671d084dd343 t/pod_syn.t
-SHA1 04cb55e06d43ecda3d6325c63733c313a695d19f t/rm.t
-SHA1 b7586b4ec77aa462f1aaf87a87d4c03d75d34b97 t/um.t
-SHA1 6a69a3d943d5e800c0a913dd15335030437455ce t/upo.t
+SHA1 a0f9c0dfbe6472e81222a196a2f17554697d0d48 t/cmn.t
+SHA1 fa24ea0033e10712a16c71466d488cd3e69e3697 t/ivmn.t
+SHA1 84e207008efae1ed0ad21601d77205c2a8739fa5 t/ivms.t
+SHA1 904d9a4f76525e2303e4b0c168c68230f223c8de t/pod_cvg.t
+SHA1 65c75abdef6f01a5d1588a307f2ddfe2333dc961 t/pod_syn.t
+SHA1 483ec01b4d41aab99db4691fc2489b609b237631 t/rm.t
+SHA1 74e1799ffe612d04ef94a90dad6a2d89c610e12d t/um.t
+SHA1 f9df0edc3dff53a9f574113a32c12454c4b6c1ef t/upo.t
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAkuj8CwACgkQOV9mt2VyAVGPUQCfYIUqLgv8XofkAMNKb8IZKuD8
-zVMAoIbcwvqfEBcNvvk+g0DawFlCSpJU
-=FcY1
+iEYEARECAAYFAk3Rbk4ACgkQOV9mt2VyAVHkmgCfSnxVXJCNm/PiL9+RR/I9ol+3
+TDYAnjm+Hby5nAWHcPZl682v7kcGU0X9
+=TSAL
 -----END PGP SIGNATURE-----
