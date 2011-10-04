@@ -14,7 +14,7 @@ configure_requires:
   strict: 0
   warnings: 0
 dynamic_config: 0
-generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.110580'
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.112621'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -23,7 +23,7 @@ name: Module-Runtime
 provides:
   Module::Runtime:
     file: lib/Module/Runtime.pm
-    version: 0.008
+    version: 0.009
 requires:
   Exporter: 0
   Params::Classify: 0
@@ -33,4 +33,4 @@ requires:
   warnings: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.008
+version: 0.009
