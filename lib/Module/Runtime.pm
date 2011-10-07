@@ -50,7 +50,7 @@ use strict;
 
 use Params::Classify 0.000 qw(is_string);
 
-our $VERSION = "0.009";
+our $VERSION = "0.010";
 
 use parent "Exporter";
 our @EXPORT_OK = qw(
@@ -263,7 +263,7 @@ sub use_package_optimistically($;$) {
 	eval { local $SIG{__DIE__}; require(module_notional_filename($name)); };
 	die $@ if $@ ne "" && $@ !~ /\A
 		Can't\ locate\ .+\ at
-		\ @{[__FILE__]}\ line\ @{[__LINE__-1]}
+		\ \Q@{[__FILE__]}\E\ line\ \Q@{[__LINE__-1]}\E
 	/xs;
 	$name->VERSION($version) if defined $version;
 	return $name;
