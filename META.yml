@@ -23,7 +23,7 @@ name: Module-Runtime
 provides:
   Module::Runtime:
     file: lib/Module/Runtime.pm
-    version: 0.010
+    version: 0.011
 requires:
   Exporter: 0
   Params::Classify: 0
@@ -33,4 +33,4 @@ requires:
   warnings: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.010
+version: 0.011
