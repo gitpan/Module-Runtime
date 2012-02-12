@@ -37,22 +37,92 @@ Module::Runtime - runtime module handling
 
 =head1 DESCRIPTION
 
-The functions exported by this module deal with runtime handling of Perl
-modules, which are normally handled at compile time.
+The functions exported by this module deal with runtime handling of
+Perl modules, which are normally handled at compile time.  This module
+avoids using any other modules, so that it can be used in low-level
+infrastructure.
+
+The parts of this module that work with module names apply the same
+syntax that is used for barewords in Perl source.  In principle this
+syntax can vary between versions of Perl, and this module applies the
+syntax of the Perl on which it is running.  In practice the usable syntax
+hasn't changed yet, but there's a good chance of it changing in Perl 5.18.
+
+The functions of this module whose purpose is to load modules include
+workarounds for three old Perl core bugs regarding C<require>.  These
+workarounds are applied on any Perl version where the bugs exist, except
+for a case where one of the bugs cannot be adequately worked around in
+pure Perl.
+
+=head2 Module name syntax
+
+The usable module name syntax has not changed from Perl 5.000 up to
+Perl 5.15.7.  The syntax is composed entirely of ASCII characters.
+From Perl 5.6 onwards there has been some attempt to allow the use of
+non-ASCII Unicode characters in Perl source, but it was fundamentally
+broken (like the entirety of Perl 5.6's Unicode handling) and remained
+pretty much entirely unusable until it got some attention in the Perl
+5.15 series.  Although Unicode is now consistently accepted by the
+parser in some places, it remains broken for module names.  Furthermore,
+there has not yet been any work on how to map Unicode module names into
+filenames, so in that respect also Unicode module names are unusable.
+This may finally be addressed in the Perl 5.17 series.
+
+The module name syntax is, precisely: the string must consist of one or
+more segments separated by C<::>; each segment must consist of one or more
+identifier characters (ASCII alphanumerics plus "_"); the first character
+of the string must not be a digit.  Thus "C<IO::File>", "C<warnings>",
+and "C<foo::123::x_0>" are all valid module names, whereas "C<IO::>"
+and "C<1foo::bar>" are not.  C<'> separators are not permitted by this
+module, though they remain usable in Perl source, being translated to
+C<::> in the parser.
+
+=head2 Core bugs worked around
+
+The first bug worked around is core bug [perl #68590], which causes
+lexical state in one file to leak into another that is C<require>d/C<use>d
+from it.  This bug is present from Perl 5.6 up to Perl 5.10, and is
+fixed in Perl 5.11.0.  From Perl 5.9.4 up to Perl 5.10.0 no satisfactory
+workaround is possible in pure Perl.  The workaround means that modules
+loaded via this module don't suffer this pollution of their lexical
+state.  Modules loaded in other ways, or via this module on the Perl
+versions where the pure Perl workaround is impossible, remain vulnerable.
+The module L<Lexical::SealRequireHints> provides a complete workaround
+for this bug.
+
+The second bug worked around causes some kinds of failure in module
+loading, principally compilation errors in the loaded module, to be
+recorded in C<%INC> as if they were successful, so later attempts to load
+the same module immediately indicate success.  This bug is present up
+to Perl 5.8.9, and is fixed in Perl 5.9.0.  The workaround means that a
+compilation error in a module loaded via this module won't be cached as
+a success.  Modules loaded in other ways remain liable to produce bogus
+C<%INC> entries, and if a bogus entry exists then it will mislead this
+module if it is used to re-attempt loading.
+
+The third bug worked around causes the wrong context to be seen at
+file scope of a loaded module, if C<require> is invoked in a location
+that inherits context from a higher scope.  This bug is present up to
+Perl 5.11.2, and is fixed in Perl 5.11.3.  The workaround means that
+a module loaded via this module will always see the correct context.
+Modules loaded in other ways remain vulnerable.
 
 =cut
 
 package Module::Runtime;
 
-{ use 5.006; }
-use warnings;
-use strict;
+# Don't "use 5.006" here, because Perl 5.15.6 will load feature.pm if
+# the version check is done that way.
+BEGIN { require 5.006; }
+# Don't "use warnings" here, to avoid dependencies.  Do standardise the
+# warning status by lexical override; unfortunately the only safe bitset
+# to build in is the empty set, equivalent to "no warnings".
+BEGIN { ${^WARNING_BITS} = ""; }
+# Don't "use strict" here, to avoid dependencies.
 
-use Params::Classify 0.000 qw(is_string);
+our $VERSION = "0.012";
 
-our $VERSION = "0.011";
-
-use parent "Exporter";
+# Don't use Exporter here, to avoid dependencies.
 our @EXPORT_OK = qw(
 	$module_name_rx is_module_name is_valid_module_name check_module_name
 	module_notional_filename require_module
@@ -61,6 +131,36 @@ our @EXPORT_OK = qw(
 	is_module_spec is_valid_module_spec check_module_spec
 	compose_module_name
 );
+my %export_ok = map { ($_ => undef) } @EXPORT_OK;
+sub import {
+	my $me = shift;
+	my $callpkg = caller(0);
+	my $errs = "";
+	foreach(@_) {
+		if(exists $export_ok{$_}) {
+			# We would need to do "no strict 'refs'" here
+			# if we had enabled strict at file scope.
+			if(/\A\$(.*)\z/s) {
+				*{$callpkg."::".$1} = \$$1;
+			} else {
+				*{$callpkg."::".$_} = \&$_;
+			}
+		} else {
+			$errs .= "\"$_\" is not exported by the $me module\n";
+		}
+	}
+	if($errs ne "") {
+		die "${errs}Can't continue after import errors ".
+			"at @{[(caller(0))[1]]} line @{[(caller(0))[2]]}.\n";
+	}
+}
+
+# Logic duplicated from Params::Classify.  Duplicating it here avoids
+# an extensive and potentially circular dependency graph.
+sub _is_string($) {
+	my($arg) = @_;
+	return defined($arg) && ref(\$arg) eq "SCALAR";
+}
 
 =head1 REGULAR EXPRESSIONS
 
@@ -73,15 +173,6 @@ anchors yourself.
 =item $module_name_rx
 
 Matches a valid Perl module name in bareword syntax.
-The rule for this, precisely, is: the string must
-consist of one or more segments separated by C<::>; each segment must
-consist of one or more identifier characters (alphanumerics plus "_");
-the first character of the string must not be a digit.  Thus "C<IO::File>",
-"C<warnings>", and "C<foo::123::x_0>" are all valid module names, whereas
-"C<IO::>" and "C<1foo::bar>" are not.
-Only ASCII characters are permitted; Perl's handling of non-ASCII
-characters in source code is inconsistent.
-C<'> separators are not permitted.
 
 =cut
 
@@ -128,7 +219,7 @@ satisfying Perl module name syntax as described for L</$module_name_rx>.
 
 =cut
 
-sub is_module_name($) { is_string($_[0]) && $_[0] =~ /\A$module_name_rx\z/o }
+sub is_module_name($) { _is_string($_[0]) && $_[0] =~ /\A$module_name_rx\z/o }
 
 =item is_valid_module_name(ARG)
 
@@ -148,7 +239,7 @@ Return normally if it is, or C<die> if it is not.
 
 sub check_module_name($) {
 	unless(&is_module_name) {
-		die +(is_string($_[0]) ? "`$_[0]'" : "argument").
+		die +(_is_string($_[0]) ? "`$_[0]'" : "argument").
 			" is not a module name\n";
 	}
 }
@@ -194,15 +285,37 @@ was already loaded.
 
 =cut
 
+# Don't "use constant" here, to avoid dependencies.
+BEGIN {
+	*_WORK_AROUND_HINT_LEAKAGE =
+		"$]" < 5.011 && !("$]" >= 5.009004 && "$]" < 5.010001)
+			? sub(){1} : sub(){0};
+	*_WORK_AROUND_BROKEN_MODULE_STATE = "$]" < 5.009 ? sub(){1} : sub(){0};
+}
+
+BEGIN { if(_WORK_AROUND_BROKEN_MODULE_STATE) { eval q{
+	sub Module::Runtime::__GUARD__::DESTROY {
+		delete $INC{$_[0]->[0]} if @{$_[0]};
+	}
+	1;
+}; die $@ if $@ ne ""; } }
+
 sub require_module($) {
-	# Explicit scalar() here works around a Perl core bug, present
-	# in Perl 5.8 and 5.10, which allowed a require() in return
-	# position to pass a non-scalar context through to file scope
-	# of the required file.  This breaks some modules.  require()
-	# in any other position, where its op flags determine context
-	# statically, doesn't have this problem, because the op flags
-	# are forced to scalar.
-	return scalar(require(&module_notional_filename));
+	# Localise %^H to work around [perl #68590], where the bug exists
+	# and this is a satisfactory workaround.  The bug consists of
+	# %^H state leaking into each required module, polluting the
+	# module's lexical state.
+	local %^H if _WORK_AROUND_HINT_LEAKAGE;
+	if(_WORK_AROUND_BROKEN_MODULE_STATE) {
+		my $notional_filename = &module_notional_filename;
+		my $guard = bless([ $notional_filename ],
+				"Module::Runtime::__GUARD__");
+		my $result = require($notional_filename);
+		pop @$guard;
+		return $result;
+	} else {
+		return scalar(require(&module_notional_filename));
+	}
 }
 
 =back
@@ -248,8 +361,8 @@ be available, either by loading a module or by doing nothing and hoping.
 
 An attempt is made to load the named module (as if by the bareword form
 of C<require>).  If the module cannot be found then it is assumed that
-the package was actually already loaded but wasn't detected correctly,
-and no error is signalled.  That's the optimistic bit.
+the package was actually already loaded by other means, and no error
+is signalled.  That's the optimistic bit.
 
 This is mostly the same operation that is performed by the L<base> pragma
 to ensure that the specified base classes are available.  The behaviour
@@ -267,11 +380,9 @@ function work just like L</use_module>.
 sub use_package_optimistically($;$) {
 	my($name, $version) = @_;
 	check_module_name($name);
-	eval { local $SIG{__DIE__}; require(module_notional_filename($name)); };
-	die $@ if $@ ne "" && $@ !~ /\A
-		Can't\ locate\ .+\ at
-		\ \Q@{[__FILE__]}\E\ line\ \Q@{[__LINE__-1]}\E
-	/xs;
+	eval { local $SIG{__DIE__}; require_module($name); };
+	die $@ if $@ ne "" &&
+		$@ !~ /\ACan't locate .+ at \Q@{[__FILE__]}\E line/s;
 	$name->VERSION($version) if defined $version;
 	return $name;
 }
@@ -294,7 +405,7 @@ so this function treats I<PREFIX> as a truth value.
 
 sub is_module_spec($$) {
 	my($prefix, $spec) = @_;
-	return is_string($spec) &&
+	return _is_string($spec) &&
 		$spec =~ ($prefix ? qr/\A$sub_module_spec_rx\z/o :
 				    qr/\A$top_module_spec_rx\z/o);
 }
@@ -316,7 +427,7 @@ Return normally if it is, or C<die> if it is not.
 
 sub check_module_spec($$) {
 	unless(&is_module_spec) {
-		die +(is_string($_[1]) ? "`$_[1]'" : "argument").
+		die +(_is_string($_[1]) ? "`$_[1]'" : "argument").
 			" is not a module specification\n";
 	}
 }
@@ -359,6 +470,7 @@ sub compose_module_name($$) {
 
 =head1 SEE ALSO
 
+L<Lexical::SealRequireHints>,
 L<base>,
 L<perlfunc/require>,
 L<perlfunc/use>
@@ -369,7 +481,7 @@ Andrew Main (Zefram) <zefram@fysh.org>
 
 =head1 COPYRIGHT
 
-Copyright (C) 2004, 2006, 2007, 2009, 2010, 2011
+Copyright (C) 2004, 2006, 2007, 2009, 2010, 2011, 2012
 Andrew Main (Zefram) <zefram@fysh.org>
 
 =head1 LICENSE

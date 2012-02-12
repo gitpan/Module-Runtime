@@ -33,19 +33,14 @@
       },
       "runtime" : {
          "requires" : {
-            "Exporter" : 0,
-            "Params::Classify" : 0,
-            "parent" : 0,
-            "perl" : "5.006",
-            "strict" : 0,
-            "warnings" : 0
+            "perl" : "5.006"
          }
       }
    },
    "provides" : {
       "Module::Runtime" : {
          "file" : "lib/Module/Runtime.pm",
-         "version" : "0.011"
+         "version" : "0.012"
       }
    },
    "release_status" : "stable",
@@ -54,5 +49,5 @@
          "http://dev.perl.org/licenses/"
       ]
    },
-   "version" : "0.011"
+   "version" : "0.012"
 }
