@@ -23,9 +23,9 @@ name: Module-Runtime
 provides:
   Module::Runtime:
     file: lib/Module/Runtime.pm
-    version: 0.012
+    version: 0.013
 requires:
   perl: 5.006
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.012
+version: 0.013
