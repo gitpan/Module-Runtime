@@ -1,3 +1,24 @@
+version 0.014; 2014-02-06
+
+  * bugfix: suppress any CORE::GLOBAL::require override, where possible,
+    to avoid use_package_optimistically() being misled into treating
+    missing modules as broken
+
+  * bugfix: in use_module() and use_package_optimistically(), pass a
+    supplied VERSION parameter through for the version check even if it
+    is undef
+
+  * tighten use_package_optimistically()'s recognition of can't-locate
+    errors (the same way that base.pm has recently been tightened),
+    so that, when a module fails to load because a module that it uses
+    isn't available, the outer module will be perceived as broken rather
+    than missing
+
+  * update documentation notes about the state of Unicode handling for
+    module names
+
+  * in META.{yml,json}, point to public git repository
+
 version 0.013; 2012-02-16
 
   * fix false failure of the test for lack of unintended dependencies

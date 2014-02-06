@@ -11,6 +11,8 @@ t/Break.pm
 t/Context.pm
 t/Eval.pm
 t/Hints.pm
+t/Nest0.pm
+t/Nest1.pm
 t/Simple.pm
 t/cmn.t
 t/dependency.t
@@ -24,4 +26,5 @@ t/rm.t
 t/taint.t
 t/um.t
 t/upo.t
+t/upo_overridden.t
 SIGNATURE    Added here by Module::Build
